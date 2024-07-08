@@ -57,11 +57,11 @@ while(cap.isOpened()):
                 elif angle < 14 and is_down == True:
                     is_down = False
                     pull_up_count += 1
-                print('push up count:', pull_up_count)
+                print('pull up count:', pull_up_count)
 
             annotated_frame = results[0].plot()
             bar_length = int(570 * angle / 180)
-            cv2.putText(annotated_frame, f'Push-ups: {pull_up_count}', (20, 70), 2, 2, (10, 10, 255), 5)
+            cv2.putText(annotated_frame, f'Pull-ups: {pull_up_count}', (20, 70), 2, 2, (10, 10, 255), 5)
             cv2.rectangle(annotated_frame, (50,100), (100,600), (0, 0, 255), thickness=-1, lineType=cv2.LINE_8)
             cv2.rectangle(annotated_frame, (50,100 + bar_length), (100,600), (9, 255, 0), thickness=-1, lineType=cv2.LINE_8)
             cv2.imshow("Inference",annotated_frame)
