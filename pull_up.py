@@ -5,15 +5,14 @@ import numpy as np
 model = YOLO("yolov8n-pose.pt")
 
 def calculate_angle(p1, p2, p3):
-    # p1, p2, p3 are the points in format [x, y]
-    # Calculate the vectors
+
     v1 = np.array(p1) - np.array(p2)
     v2 = np.array(p3) - np.array(p2)
 
-    # Calculate the angle in radians
+
     angle_rad = np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
-    # Convert to degrees
+
     angle_deg = np.degrees(angle_rad)
 
     return angle_deg
@@ -51,13 +50,17 @@ while(cap.isOpened()):
                 print("Head: ",keypoints[0][0][1])
                 print("left Hand: ", keypoints[0][9][1])
                 print("right Hand: ", keypoints[0][10][1])
+                if check_form(keypoints):
+                    if angle > 90 and is_down == False:
+                        is_down = True
+                    elif angle < 14 and is_down == True:
+                        is_down = False
+                        pull_up_count += 1
+                    print('pull up count:', pull_up_count)
+                else:
+                    position = 'Correct the Posture'
+                    cv2.putText(frame, position, (800, 100), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 10)
 
-                if angle > 90 and is_down == False:
-                    is_down = True
-                elif angle < 14 and is_down == True:
-                    is_down = False
-                    pull_up_count += 1
-                print('pull up count:', pull_up_count)
 
             annotated_frame = results[0].plot()
             bar_length = int(570 * angle / 180)
