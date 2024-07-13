@@ -1,20 +1,30 @@
 document.addEventListener('DOMContentLoaded', function () {
     const exerciseSelect = document.getElementById('exerciseSelect');
     const exerciseVideo = document.getElementById('exerciseVideo');
-    const videoSource = exerciseVideo.querySelector('source');
-    const videoFeed = document.getElementById('videoFeed')
+    const videoSource = document.getElementById('videoSource');
+    const videoFeed = document.getElementById('videoFeed');
+
+    if (!exerciseSelect || !exerciseVideo || !videoSource || !videoFeed) {
+        console.error('One or more elements were not found.');
+        return;
+    }
 
     exerciseSelect.addEventListener('change', function () {
         const selectedValue = exerciseSelect.value;
-        if (selectedValue === "video_feed") {
-            videoSource.setAttribute('src', '../static/videos/push_ups.mp4');
-            videoFeed.setAttribute('src', 'video_feed');
-            console.log('push up')
-        } else if (selectedValue === "video_feed_pull_up") {
-            videoSource.setAttribute('src', '../static/videos/pull_ups.mp4');
-            videoFeed.setAttribute('src', 'video_feed_pull_up');
-            console.log('pull up')
-        }
+        console.log('Selected value:', selectedValue);
+
+        videoSource.setAttribute('src', selectedValue);
         exerciseVideo.load();
+
+        if (selectedValue === "../static/videos/push_ups.mp4") {
+            videoFeed.setAttribute('src', 'video_feed');
+        } else if (selectedValue === "../static/videos/pull_ups.mp4") {
+            videoFeed.setAttribute('src', 'video_feed_pull_up');
+        } else if (selectedValue === "../static/videos/lunges.mp4") {
+            videoFeed.setAttribute('src', 'video_feed_lunges');
+        }
+
+        console.log('Updated video source:', videoSource.getAttribute('src'));
+        console.log('Updated video feed source:', videoFeed.getAttribute('src'));
     });
 });
