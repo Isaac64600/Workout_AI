@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Park Exercise Tracker</title>
+    <link rel="stylesheet" href="../static/styles/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav">
+            <a href="#" class="brand">Fitness Exercise Tracker</a>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Exercises</a></li>
+                <li><a href="#">Performance</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+    <header>
+        <div class="head">
+            <h1>Track Your Fitness with Precision</h1>
+            <p>Use our exercise tracker to monitor your performance and improve your fitness.</p>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <div class="exercise-selection">
+                <h2>Select Exercise</h2>
+                <select id="exerciseSelect">
+                    <option value="../static/videos/push_ups.mp4">Push-Ups</option>
+                    <option value="../static/videos/pull_ups.mp4">Pull-Ups</option>
+                    <option value="../static/videos/squat.mp4">Squat</option>
+                    <!-- Add more exercises as needed -->
+                </select>
+            </div>
+            <div class="exercise-video" id="exercise-video">
+                <h2>Exercise Demonstration</h2>
+                <video controls width="640" height="480" id="exerciseVideo">
+                    <source src="../static/videos/push_ups.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="exercise-monitor">
+                <h2>Your Exercise Performance</h2>
+                <img id="videoFeed" src="video_feed" alt="Video Feed">
+                <p id="exerciseCount">Push-ups: {{push_up_count}}</p>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Fitness Exercise Tracker. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="../static/scripts/script.js"></script>
+</body>
+</html>

@@ -1,117 +1,100 @@
+from flask import Flask, render_template, Response
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import threading
+
+import pull_up
+import push_up
+import squat
+
+app = Flask(__name__)
 
 model = YOLO("yolov8n-pose.pt")
 
-def calculate_angle(p1, p2, p3):
+# Global video capture variables
+video_capture = None
+capture_lock = threading.Lock()
 
-    v1 = np.array(p1) - np.array(p2)
-    v2 = np.array(p3) - np.array(p2)
+def release_video_capture():
+    global video_capture
+    with capture_lock:
+        if video_capture is not None:
+            video_capture.release()
+            video_capture = None
 
+def initialize_video_capture():
+    global video_capture
+    release_video_capture()
+    with capture_lock:
+        video_capture = cv2.VideoCapture(0)
+        video_capture.set(3, 640)
+        video_capture.set(4, 480)
 
-    angle_rad = np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+def reset_globals():
+    global count, transition, is_down, form
+    count = 0
+    transition = False
+    is_down = False
+    form = None
 
+def generate_frames(exercise):
+    global video_capture
+    initialize_video_capture()
+    reset_globals()
+    while True:
+        with capture_lock:
+            if video_capture is None:
+                break
+            success, frame = video_capture.read()
+            if not success:
+                break
 
-    angle_deg = np.degrees(angle_rad)
+        frame = cv2.resize(frame, (640, 480))
+        results = model(frame)
 
-    return angle_deg
-
-def check_form(keypoints,facing,transition):
-    f = open("demofile2.txt", "a")
-    left_elbow_angle = calculate_angle(keypoints[0][5], keypoints[0][7], keypoints[0][9])
-    left_hip_angle = calculate_angle(keypoints[0][5],keypoints[0][11], keypoints[0][15])
-    right_elbow_angle = calculate_angle(keypoints[0][6], keypoints[0][8],keypoints[0][10])
-    right_hip_angle = calculate_angle(keypoints[0][6],keypoints[0][12], keypoints[0][16])
-    if facing:
-        elbow_angle = left_elbow_angle
-        hip_angle = left_hip_angle
-    else :
-        elbow_angle = right_elbow_angle
-        hip_angle = right_hip_angle
-
-    if elbow_angle >= 155 and hip_angle >= 150 and not transition:
-        return True
-    elif elbow_angle <= 80 and hip_angle >= 150 and not transition:
-        return True
-    elif  155 > elbow_angle > 80 and hip_angle>= 150 and transition:
-        return True
-    else :
-        f.write(f"Elbow angle: {elbow_angle}\n, hip angle: {hip_angle}\n,transition: {transition}\n")
-        f.close()
-        return False
-def check_position(keypoints):
-    is_right = False
-    is_left = False
-    angle = 0
-    if keypoints[0][0][0] < 600 and keypoints[0][9][0] > keypoints[0][0][0]:
-        is_right = False
-        is_left = True
-        angle = calculate_angle(keypoints[0][5], keypoints[0][7], keypoints[0][9])
-    if keypoints[0][0][0]>600 and keypoints[0][10][0] <  keypoints[0][0][0]:
-        is_right = True
-        is_left = False
-        angle = calculate_angle(keypoints[0][6], keypoints[0][8], keypoints[0][10])
-
-    return is_right, is_left, angle
-
-push_up_count = 0
-transition =False
-is_down = False
-cap = cv2.VideoCapture("p0.mp4")
-# cap = cv2.VideoCapture(0)
-# cap.set(3, 640)
-# cap.set(4, 480)
-start = 0
-while(cap.isOpened()):
-    try:
-        success, frame = cap.read()
-
-        if success:
-            results = model(frame)
-            for r in results[0]:
-                keypoints = r.keypoints.xy
-
-                angle = check_position(keypoints)[2]
-
-                print("Angle: ", angle)
-                print("hip_angle: ", calculate_angle(keypoints[0][5], keypoints[0][11], keypoints[0][15]))
-                print("transition: ", transition)
-                print("is_down: ", is_down)
-                print("form: ", check_form(keypoints, check_position(keypoints)[1], transition))
-
-                if angle > 155 and not is_down:
-                    is_down = True
-                elif angle < 80 and is_down:
-                    is_down = False
-                    push_up_count += 1
-                    print('Push up count:', push_up_count)
-                elif 155 > angle > 80:
-                    if not transition:
-                        transition = True
-                elif angle > 155 and is_down and transition:
-                    transition = False
-                elif angle < 80 and not is_down and transition:
-                    transition = False
-
-
-                form_correct = check_form(keypoints, check_position(keypoints)[1], transition)
-                if not form_correct:
-                    cv2.putText(frame, 'Correct the Posture', (800, 100), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 10)
+        if len(results) > 0 and len(results[0]) > 0:  # Check if results contain keypoints
+            if exercise == 'push_ups':
+                push_up_count, form = push_up.push_up_count(results)
+            elif exercise == 'pull_ups':
+                pull_up_count, form = pull_up.pull_up_count(results)
+            elif exercise == "squat":
+                squat_count, form = squat.squat_count(results)
 
             annotated_frame = results[0].plot()
-            cv2.putText(annotated_frame, f'Push-ups: {push_up_count}', (20, 70), 2, 2, (10, 10, 255), 5)
-            cv2.imshow("Inference",annotated_frame)
-
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            if exercise == 'push_ups':
+                cv2.putText(annotated_frame, f'Push-ups: {push_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (10, 10, 255), 5)
+            elif exercise == 'pull_ups':
+                cv2.putText(annotated_frame, f'Pull-ups: {pull_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
+            elif exercise == "squat":
+                cv2.putText(annotated_frame, f'Squat: {squat_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
         else:
-            break
-    except ValueError:
-        print("Get into position !")
+            annotated_frame = frame
+
+        ret, buffer = cv2.imencode('.jpg', annotated_frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    release_video_capture()
 
 
-cap.release()
-cv2.destroyAllWindows()
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames('push_ups'), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/video_feed_pull_up')
+def video_feed_pull_up():
+    return Response(generate_frames('pull_ups'), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/video_feed_squat')
+def video_feed_squat():
+    return Response(generate_frames('squat'), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/')
+def index():
+    return render_template('workout.html')
+
+if __name__ == '__main__':
+    app.run(debug=True, threaded=True, use_reloader=False)

@@ -4,6 +4,11 @@ import numpy as np
 
 model = YOLO("yolov8n-pose.pt")
 
+form = None
+count = 0
+transition = False
+is_down = False
+
 def calculate_angle(p1, p2, p3):
 
     v1 = np.array(p1) - np.array(p2)
@@ -34,15 +39,14 @@ cap = cv2.VideoCapture("pull_ups.mp4")
 # cap = cv2.VideoCapture(0)
 # cap.set(3, 640)
 # cap.set(4, 480)
-while(cap.isOpened()):
-    try:
-        success, frame = cap.read()
 
-        if success:
-            results = model(frame)
-            for r in results[0]:
+def pull_up(results):
+    if len(results) > 0 and len(results[0]) > 0:  # Check if results contain keypoints
+        global count, transition, is_down, form
+        for r in results[0]:
                 keypoints = r.keypoints.xy
                 angle = calculate_angle(keypoints[0][6], keypoints[0][8], keypoints[0][10])
+                form = check_form(keypoints)
                 print("Form: ", check_form(keypoints))
                 print("Angle: ", angle)
                 Body_angle = calculate_angle(keypoints[0][11],keypoints[0][5],keypoints[0][7])
@@ -55,26 +59,6 @@ while(cap.isOpened()):
                         is_down = True
                     elif angle < 14 and is_down == True:
                         is_down = False
-                        pull_up_count += 1
+                        count += 1
                     print('pull up count:', pull_up_count)
-                else:
-                    position = 'Correct the Posture'
-                    cv2.putText(frame, position, (800, 100), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 10)
-
-
-            annotated_frame = results[0].plot()
-            cv2.putText(annotated_frame, f'Pull-ups: {pull_up_count}', (20, 70), 2, 2, (10, 10, 255), 5)
-            cv2.imshow("Inference",annotated_frame)
-
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        else:
-            break
-    except ValueError:
-        print("Get into position !")
-
-
-cap.release()
-cv2.destroyAllWindows()
-
+    return count, form

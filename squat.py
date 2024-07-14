@@ -4,6 +4,12 @@ import numpy as np
 
 model = YOLO("yolov8n-pose.pt")
 
+form = None
+count = 0
+transition = False
+is_down = False
+
+
 def calculate_angle(p1, p2, p3):
 
     v1 = np.array(p1) - np.array(p2)
@@ -46,26 +52,13 @@ def check_form(keypoints, transition):
             return True
 
 
-
-
-
-squat_count = 0
-transition =False
-is_down = False
-cap = cv2.VideoCapture("squat.mp4")
-# cap = cv2.VideoCapture(0)
-# cap.set(3, 640)
-# cap.set(4, 480)
-while(cap.isOpened()):
-    try:
-        success, frame = cap.read()
-
-        if success:
-            results = model(frame)
-            for r in results[0]:
+def squat(results):
+    if len(results) > 0 and len(results[0]) > 0:  # Check if results contain keypoints
+        global count, transition, is_down, form
+        for r in results[0]:
                 keypoints = r.keypoints.xy
                 angle = calculate_angle(keypoints[0][11], keypoints[0][13], keypoints[0][15])
-                # # print("Form: ", check_form(keypoints))
+                form = check_form(keypoints, transition)
                 print("Form: ", check_form(keypoints,transition))
                 print("Angle: ", angle)
                 Body_angle = calculate_angle(keypoints[0][5],keypoints[0][11],keypoints[0][13])
@@ -87,27 +80,8 @@ while(cap.isOpened()):
 
                 elif angle < 120 and is_down == True :
                     is_down = False
-                    squat_count += 1
+                    count += 1
 
-                print('squat count:', squat_count)
-                form_correct = check_form(keypoints, transition)
-                if not form_correct:
-                    cv2.putText(frame, 'Correct the Posture', (800, 100), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 10)
+        return count, form
 
-            annotated_frame = results[0].plot()
-
-            cv2.putText(annotated_frame, f'Squats: {squat_count}', (20, 70), 2, 2, (10, 10, 255), 5)
-            cv2.imshow("Inference",annotated_frame)
-
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        else:
-            break
-    except ValueError:
-        print("Get into position !")
-
-
-cap.release()
-cv2.destroyAllWindows()
 
