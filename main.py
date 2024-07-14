@@ -63,12 +63,15 @@ def generate_frames(exercise):
                 squat_count, form = squat.squat_count(results)
 
             annotated_frame = results[0].plot()
-            if exercise == 'push_ups':
-                cv2.putText(annotated_frame, f'Push-ups: {push_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (10, 10, 255), 5)
-            elif exercise == 'pull_ups':
-                cv2.putText(annotated_frame, f'Pull-ups: {pull_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
-            elif exercise == "squat":
-                cv2.putText(annotated_frame, f'Squat: {squat_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
+            if form :
+                if exercise == 'push_ups':
+                    cv2.putText(annotated_frame, f'Push-ups: {push_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (10, 10, 255), 5)
+                elif exercise == 'pull_ups':
+                    cv2.putText(annotated_frame, f'Pull-ups: {pull_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
+                elif exercise == "squat":
+                    cv2.putText(annotated_frame, f'Squat: {squat_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
+            else:
+                cv2.putText(annotated_frame,'Correct the Posture',(20,70),cv2.FONT_HERSHEY_PLAIN,5,(0,0,255),10)
         else:
             annotated_frame = frame
 
