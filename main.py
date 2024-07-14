@@ -16,6 +16,7 @@ model = YOLO("yolov8n-pose.pt")
 video_capture = None
 capture_lock = threading.Lock()
 
+
 def release_video_capture():
     global video_capture
     with capture_lock:

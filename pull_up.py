@@ -33,14 +33,7 @@ def check_form(keypoints):
         return False
 
 
-pull_up_count = 0
-is_down = False
-cap = cv2.VideoCapture("pull_ups.mp4")
-# cap = cv2.VideoCapture(0)
-# cap.set(3, 640)
-# cap.set(4, 480)
-
-def pull_up(results):
+def pull_up_count(results):
     if len(results) > 0 and len(results[0]) > 0:  # Check if results contain keypoints
         global count, transition, is_down, form
         for r in results[0]:
@@ -49,16 +42,17 @@ def pull_up(results):
                 form = check_form(keypoints)
                 print("Form: ", check_form(keypoints))
                 print("Angle: ", angle)
-                Body_angle = calculate_angle(keypoints[0][11],keypoints[0][5],keypoints[0][7])
-                print("Body: ", Body_angle)
-                print("Head: ",keypoints[0][0][1])
-                print("left Hand: ", keypoints[0][9][1])
-                print("right Hand: ", keypoints[0][10][1])
-                if check_form(keypoints):
-                    if angle > 90 and is_down == False:
+                print("IsDown: ", is_down)
+                print("Count: ", count)
+                # Body_angle = calculate_angle(keypoints[0][11],keypoints[0][5],keypoints[0][7])
+                # print("Body: ", Body_angle)
+                # print("Head: ",keypoints[0][0][1])
+                # print("left Hand: ", keypoints[0][9][1])
+                # print("right Hand: ", keypoints[0][10][1])
+                if angle > 90 and is_down == False:
                         is_down = True
-                    elif angle < 14 and is_down == True:
+                elif angle < 68 and is_down == True:
                         is_down = False
                         count += 1
-                    print('pull up count:', pull_up_count)
+
     return count, form
