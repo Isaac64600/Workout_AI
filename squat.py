@@ -52,7 +52,7 @@ def check_form(keypoints, transition):
             return True
 
 
-def squat(results):
+def squat_count(results):
     if len(results) > 0 and len(results[0]) > 0:  # Check if results contain keypoints
         global count, transition, is_down, form
         for r in results[0]:
