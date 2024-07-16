@@ -16,6 +16,14 @@ model = YOLO("yolov8n-pose.pt")
 video_capture = None
 capture_lock = threading.Lock()
 
+# Global variables for counting and form tracking
+exercise_count = {
+    'push_ups': 0,
+    'pull_ups': 0,
+    'squat': 0
+}
+
+form = None
 
 def release_video_capture():
     global video_capture
@@ -33,14 +41,11 @@ def initialize_video_capture():
         video_capture.set(4, 480)
 
 def reset_globals():
-    global count, transition, is_down, form
-    count = 0
-    transition = False
-    is_down = False
+    global form
     form = None
 
 def generate_frames(exercise):
-    global video_capture
+    global video_capture, form
     initialize_video_capture()
     reset_globals()
     while True:
@@ -56,22 +61,20 @@ def generate_frames(exercise):
 
         if len(results) > 0 and len(results[0]) > 0:  # Check if results contain keypoints
             if exercise == 'push_ups':
-                push_up_count, form = push_up.push_up_count(results)
+                reps, form = push_up.push_up_count(results)
+                exercise_count['push_ups'] = reps
             elif exercise == 'pull_ups':
-                pull_up_count, form = pull_up.pull_up_count(results)
+                reps, form = pull_up.pull_up_count(results)
+                exercise_count['pull_ups'] = reps
             elif exercise == "squat":
-                squat_count, form = squat.squat_count(results)
+                reps, form = squat.squat_count(results)
+                exercise_count['squat'] = reps
 
             annotated_frame = results[0].plot()
-            if form :
-                if exercise == 'push_ups':
-                    cv2.putText(annotated_frame, f'Push-ups: {push_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (10, 10, 255), 5)
-                elif exercise == 'pull_ups':
-                    cv2.putText(annotated_frame, f'Pull-ups: {pull_up_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
-                elif exercise == "squat":
-                    cv2.putText(annotated_frame, f'Squat: {squat_count}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 10, 10), 5)
+            if form:
+                cv2.putText(annotated_frame, f'{exercise.capitalize()}: {exercise_count[exercise]}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (10, 10, 255), 5)
             else:
-                cv2.putText(annotated_frame,'Correct the Posture',(20,70),cv2.FONT_HERSHEY_PLAIN,5,(0,0,255),10)
+                cv2.putText(annotated_frame, 'Correct the Posture', (20, 70), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 10)
         else:
             annotated_frame = frame
 
