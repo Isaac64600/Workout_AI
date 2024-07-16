@@ -1,4 +1,4 @@
-# Tracker d'Exercice Fitness Park
+# Tracker d'Exercice Workout AI
 
 ## Description
 Le Tracker d'Exercice Fitness Park est une application web qui aide les utilisateurs à suivre leurs exercices de fitness avec précision. L'application utilise un modèle de détection de pose basé sur YOLO pour surveiller et compter les exercices tels que les pompes des tractions et des squats en temps réel à l'aide d'une webcam.
