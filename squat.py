@@ -7,7 +7,7 @@ model = YOLO("yolov8n-pose.pt")
 form = None
 count = 0
 transition = False
-is_down = False
+is_down = True
 
 
 def calculate_angle(p1, p2, p3):
@@ -29,8 +29,8 @@ def check_form(keypoints, transition):
     body_angle = calculate_angle(keypoints[0][5], keypoints[0][11], keypoints[0][13])
 
 
-    if leg_angle > 160 and not transition:
-        if body_angle > 160:
+    if leg_angle > 159 and not transition:
+        if body_angle > 163:
             return True
         else:
             f.write(f"Body Angle: {body_angle}\n")
@@ -39,7 +39,7 @@ def check_form(keypoints, transition):
 
 
     elif leg_angle < 120 and not transition:
-        if body_angle < 110:
+        if body_angle < 100:
             return True
         else:
             f.write(f"Body Angle: {body_angle}\n, Leg Angle: {leg_angle}\n")
@@ -47,8 +47,8 @@ def check_form(keypoints, transition):
             return False
 
 
-    elif 120 <= leg_angle <= 160 and transition:
-        if 110 <= body_angle <= 160:
+    elif 120 <= leg_angle <= 175 and transition:
+        if 100 <= body_angle <= 170:
             return True
 
 
@@ -59,28 +59,26 @@ def squat_count(results):
                 keypoints = r.keypoints.xy
                 angle = calculate_angle(keypoints[0][11], keypoints[0][13], keypoints[0][15])
                 form = check_form(keypoints, transition)
-                print("Form: ", check_form(keypoints,transition))
+                print("Form: ", check_form(keypoints, transition))
+                print("Is Down: ", is_down)
+                print("Transition: ", transition)
                 print("Angle: ", angle)
-                Body_angle = calculate_angle(keypoints[0][5],keypoints[0][11],keypoints[0][13])
+                Body_angle = calculate_angle(keypoints[0][5], keypoints[0][11], keypoints[0][13])
                 print("Body: ", Body_angle)
-                # print("Head: ",keypoints[0][0][1])
-                # # print("left Hand: ", keypoints[0][9][1])
-                # # print("right Hand: ", keypoints[0][10][1])
-                print(transition)
-                if angle > 160 and is_down == False :
-                    is_down = True
-                elif angle > 160 and is_down == True and transition == True :
-                    transition = False
-
-                elif 120 < angle < 160 and transition == False:
-                    transition = True
-
-                elif angle < 120 and is_down == False and transition == True:
-                    transition = False
-
-                elif angle < 120 and is_down == True :
-                    is_down = False
-                    count += 1
+                if angle > 160:
+                    if not is_down and transition:
+                        transition = False
+                        is_down = True
+                        if form:
+                            count += 1
+                            print("count: ", count)
+                elif 123 < angle < 160:
+                    if not transition:
+                        transition = True
+                elif angle < 123:
+                    if is_down and transition:
+                        transition = False
+                        is_down = False
 
         return count, form
 

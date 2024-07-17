@@ -7,7 +7,7 @@ model = YOLO("yolov8n-pose.pt")
 form = None
 count = 0
 transition = False
-is_down = False
+is_down = True
 
 
 def calculate_angle(p1, p2, p3):
@@ -34,11 +34,11 @@ def check_form(keypoints, facing, transition):
         elbow_angle = right_elbow_angle
         hip_angle = right_hip_angle
 
-    if elbow_angle >= 155 and hip_angle >= 150 and not transition:
+    if elbow_angle >= 155 and hip_angle >= 148 and not transition:
         return True
-    elif elbow_angle <= 80 and hip_angle >= 150 and not transition:
+    elif elbow_angle <= 80 and hip_angle >= 148 and not transition:
         return True
-    elif 155 > elbow_angle > 80 and hip_angle >= 150 and transition:
+    elif 165 > elbow_angle > 74 and hip_angle >= 148 and transition:
         return True
     else:
         f.write(f"Elbow angle: {elbow_angle}\n, hip angle: {hip_angle}\n,transition: {transition}\n")
@@ -77,18 +77,20 @@ def push_up_count(results):
             form = check_form(keypoints, check_position(keypoints)[1], transition)
             print("form: ", check_form(keypoints, check_position(keypoints)[1], transition))
 
-            if angle > 155 and not is_down:
-                is_down = True
-            elif angle < 80 and is_down:
-                is_down = False
-                count += 1
-                print('Push up count:', count)
-            elif 155 > angle > 80:
+            if angle > 155:
+                if not is_down and transition:
+                    transition = False
+                    is_down = True
+                    if form:
+                        count += 1
+                        print("count: ", count)
+            elif 95 < angle < 155:
                 if not transition:
                     transition = True
-            elif angle > 155 and is_down and transition:
-                transition = False
-            elif angle < 80 and not is_down and transition:
-                transition = False
+            elif angle < 95:
+                if is_down and transition:
+                    transition = False
+                    is_down = False
+
 
     return count, form
