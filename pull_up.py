@@ -53,6 +53,7 @@ def pull_up_count(results):
                         is_down = True
                 elif angle < 68 and is_down == True:
                         is_down = False
-                        count += 1
+                        if form:
+                            count += 1
 
     return count, form
